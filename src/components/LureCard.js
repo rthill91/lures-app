@@ -23,7 +23,7 @@ export default class LureCard extends Component {
               <Button
                 key={action.title}
                 color={action.color}
-                onClick={action.callback} >
+                onClick={() => action.callback(this.props.lure)} >
                 {action.title}
               </Button>
             )
