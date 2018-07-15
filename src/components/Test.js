@@ -2,30 +2,64 @@ import React, { Component } from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import LureCardGridLayout from './layouts/LureCardGridLayout';
 import LureDialog from './LureDialog';
-import { GetLures } from './Api';
+import EditLureDialog from './EditLureDialog';
+import { GetLures, SaveLure } from './Api';
 
 export default class Test extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      open: false,
       lures: [],
       lureDialogIsOpen: false,
+      editLureDialogIsOpen: false,
       selectedLure: null,
     }
   }
 
   componentDidMount() {
+    let lures = []
     GetLures()
       .then(res => {
+        lures = res;
+      })
+      .catch(err => {
+        console.warn('using sample lures')
+        lures = [
+          {
+            'id': 'someguid1',
+            'name': 'Lure Name #1',
+            'quantity': 1,
+            'image_path': 'url to image',
+            'description': 'this is a description',
+            'additional_fields': {
+              'custom_field_key': 'custom_field_content',
+            }
+          },
+          {
+            'id': 'someguid2',
+            'name': 'Lure Name #2',
+            'quantity': 2,
+            'image_path': 'url to image',
+            'description': 'this is a description',
+            'additional_fields': {
+              'custom_field_key': 'custom_field_content',
+            }
+          }
+        ]
+      })
+      .finally(() => {
         this.setState({
-          lures: res
+          lures: lures
         })
       })
   }
 
-  editLure = (lure) => {
+  openEditLureDialog = (lure) => {
     console.debug('editLure');
+    this.setState({
+      editLureDialogIsOpen: true,
+      selectedLure: lure,
+    })
   }
 
   openLureDialog = (lure) => {
@@ -36,42 +70,20 @@ export default class Test extends Component {
     });
   }
 
-  handleDialogClose = () => {
+  handleDialogClose = (dialogKey) => {
     this.setState({
-      lureDialogIsOpen: false,
+      [dialogKey]: false,
     });
   }
 
   
   render() {
     // TODO: remove this block
-    let lures = [
-      {
-        'id': 'someguid1',
-        'name': 'Lure Name #1',
-        'quantity': 1,
-        'image_path': 'url to image',
-        'description': 'this is a description',
-        'additional_fields': {
-          'custom_field_key': 'custom_field_content',
-        }
-      },
-      {
-        'id': 'someguid2',
-        'name': 'Lure Name #2',
-        'quantity': 2,
-        'image_path': 'url to image',
-        'description': 'this is a description',
-        'additional_fields': {
-          'custom_field_key': 'custom_field_content',
-        }
-      }
-    ]
     let actions = [
       {
         'title': 'Edit',
         'color': 'primary',
-        'callback': this.editLure,
+        'callback': this.openEditLureDialog,
       },
       {
         'title': 'Open',
@@ -79,21 +91,22 @@ export default class Test extends Component {
         'callback': this.openLureDialog,
       },
     ]
-    if (this.state.lures.length === 0) {
-      console.warn('using sample lures')
-      this.setState({
-        lures: lures,
-      });
-    }
     // END
     return (
       <div>
         <LureCardGridLayout lures={this.state.lures} actions={actions} />
         <Dialog
           open={this.state.lureDialogIsOpen}
-          onClose={this.handleDialogClose}>
+          onClose={() => this.handleDialogClose('lureDialogIsOpen')}>
           <LureDialog
             lure={this.state.selectedLure} />
+        </Dialog>
+        <Dialog
+          open={this.state.editLureDialogIsOpen}
+          onClose={() => this.handleDialogClose('editLureDialogIsOpen')}>
+          <EditLureDialog
+            lure={this.state.selectedLure}
+            saveCallback={SaveLure} />
         </Dialog>
       </div>
     );
